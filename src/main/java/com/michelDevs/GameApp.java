@@ -41,6 +41,37 @@ public class GameApp extends Application {
         primaryStage.show();
     }
 
+    // Ajoute cette méthode dans ta classe GameApp
+    private void runSimulation() {
+        System.out.println("Calcul en cours...");
+
+        // 1. Lancer le LoadFlow (comme au Niveau 1)
+        // LoadFlowResult result = ...
+
+        // 2. Si le calcul plante (réseau impossible), on arrête
+        // if (!result.isOk()) { System.out.println("BOOM ! Blackout."); return; }
+
+        // 3. Mettre à jour les couleurs
+        // Pour chaque ligne graphique dans 'root.getChildren()'...
+        // (Astuce : c'est galère de retrouver la ligne graphique depuis le root.
+        // Mieux vaut stocker tes 'lineShape' dans une Map<String, Line> shapeMap lors de la création !)
+
+    /* Pseudo-code de la boucle de mise à jour :
+    for (LignePowSyBl line : network.getLines()) {
+        double courant = ... (récupérer P, U, calculer I)
+        double limite = ... (récupérer line.getCurrentLimits()...)
+
+        Line shape = shapeMap.get(line.getId());
+
+        if (courant > limite) {
+             shape.setStroke(Color.RED);
+        } else {
+             shape.setStroke(Color.GREEN);
+        }
+    }
+    */
+    }
+
     private void drawNetwork() {
 
 
@@ -79,6 +110,7 @@ public class GameApp extends Application {
                 } else {
                     // RECONNEXION PHYSIQUE
                     var vl = t1.getVoltageLevel();
+                    line.connect();
 
 
                     lineShape.setStroke(Color.WHITE);

@@ -2,12 +2,14 @@ package com.michelDevs;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
+import com.powsybl.iidm.network.Line;
+import com.powsybl.iidm.network.Terminal;
 import javafx.application.Application;
+import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 
 import java.awt.*;
@@ -19,7 +21,7 @@ public class GameApp extends Application {
     private GameEngine engine = new GameEngine();
     private Network network;
     private Group root = new Group();
-    private Map<String, Point2> nodeCoordonates = new HashMap<>();
+    private Map<String, Point2D> nodeCoordonates = new HashMap<>();
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -27,7 +29,7 @@ public class GameApp extends Application {
 
         int x = 200;
         for (Substation substation : network.getSubstations()) {
-            nodeCoordonates.put(substation.getId(), new Point(x, 300));
+            nodeCoordonates.put(substation.getId(), new Point2D(x, 300));
             x += 400;
         }
 
@@ -40,39 +42,55 @@ public class GameApp extends Application {
     }
 
     private void drawNetwork() {
-        // --- TON DÉFI COMMENCE ICI ---
 
-        // Indice : Tu dois placer les éléments manuellement pour l'instant.
-        // Poste 1 à gauche (x=200, y=300)
-        // Poste 2 à droite (x=600, y=300)
-
-        // 1. Dessine un Cercle pour chaque Substation du réseau
-        // Pour l'instant, fais-le "en dur" ou essaie de boucler sur network.getSubstations()
-        // et de leur attribuer des coordonnées arbitraires.
-
-        // 2. Dessine une Ligne JavaFX pour relier les deux.
-
-        // Exemple pour t'aider à démarrer :
-        /*
-        Circle node1 = new Circle(200, 300, 20, Color.CYAN);
-        root.getChildren().add(node1);
-        */
 
         for (Substation substation : network.getSubstations()) {
             Circle node1 = new Circle(
-                    nodeCoordonates.get(substation.getId()).x,
-                    nodeCoordonates.get(substation.getId()).y,
+                    nodeCoordonates.get(substation.getId()).getX(),
+                    nodeCoordonates.get(substation.getId()).getY(),
                     20,
                     Color.CYAN);
             node1.setId(substation.getId());
             root.getChildren().add(node1);
         }
 
-        Line line = new Line(200, 300, 600, 300);
-        line.setStroke(Color.WHITE);
-        line.setId("Ligne_HT");
-        root.getChildren().add(line);
+        for (Line line : network.getLines()) {
+            String nodeId1 = line.getTerminal1().getVoltageLevel().getSubstation().get().getId();
+            String nodeId2 = line.getTerminal2().getVoltageLevel().getSubstation().get().getId();
+            javafx.scene.shape.Line lineShape = new javafx.scene.shape.Line(
+                    nodeCoordonates.get(nodeId1).getX(),
+                    nodeCoordonates.get(nodeId1).getY(),
+                    nodeCoordonates.get(nodeId2).getX(),
+                    nodeCoordonates.get(nodeId2).getY()
+            );
+            lineShape.setId(line.getId());
+            lineShape.setStroke(Color.WHITE);
+            lineShape.setStrokeWidth(5);
 
+            // Exemple de logique à mettre dans l'événement de clic
+            lineShape.setOnMouseClicked(event -> {
+                Terminal t1 = line.getTerminal1();
+
+                if (t1.isConnected()) {
+                    t1.disconnect();
+                    lineShape.setStroke(Color.GRAY); // Visuel : Gris
+                    lineShape.getStrokeDashArray().addAll(10d, 10d); // Visuel : Pointillés
+                    System.out.println("Ligne ouverte !");
+                } else {
+                    // RECONNEXION PHYSIQUE
+                    var vl = t1.getVoltageLevel();
+
+
+                    lineShape.setStroke(Color.WHITE);
+                    lineShape.getStrokeDashArray().clear();
+                    System.out.println("Ligne fermée et reconnectée !");
+                }
+            });
+
+
+
+            root.getChildren().add(lineShape);
+        }
 
 
     }
